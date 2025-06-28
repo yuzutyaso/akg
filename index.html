@@ -5,19 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>シンプルな掲示板</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background-color: #f4f4f4; color: #333; }
-        h1 { text-align: center; color: #0056b3; }
-        .post-form, .posts-container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], textarea { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        textarea { resize: vertical; min-height: 80px; }
-        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-        .post { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
-        .post:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .post-meta { font-size: 0.9em; color: #666; margin-bottom: 5px; }
-        .post-message { white-space: pre-wrap; word-break: break-word; }
-        .error-message { color: red; margin-bottom: 10px; }
+        /* 基本的なスタイル */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        /* フォームと投稿コンテナのスタイル */
+        .post-form, .posts-container {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], textarea {
+            width: calc(100% - 22px); /* パディングとボーダーを考慮 */
+            padding: 12px;
+            margin-bottom: 18px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box; /* パディングとボーダーを幅に含める */
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        textarea {
+            resize: vertical; /* 垂直方向のみリサイズ可能 */
+            min-height: 100px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: block; /* ボタンをブロック要素にする */
+            width: auto; /* 幅を内容に合わせる */
+            margin-left: auto; /* 右寄せにする */
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px); /* ホバーで少し浮き上がる */
+        }
+        /* 投稿一覧のスタイル */
+        .post {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 18px;
+            margin-bottom: 18px;
+        }
+        .post:last-child {
+            border-bottom: none; /* 最後の子要素の下線は削除 */
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .post-meta {
+            font-size: 0.85em;
+            color: #777;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between; /* 日付と名前を両端に配置 */
+            align-items: center;
+        }
+        .post-meta strong {
+            color: #444;
+            font-size: 1em;
+        }
+        .post-message {
+            font-size: 1rem;
+            color: #333;
+            white-space: pre-wrap; /* 改行を保持 */
+            word-break: break-word; /* 長い単語を折り返す */
+        }
+        /* エラーメッセージのスタイル */
+        .error-message {
+            color: #d9534f;
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none; /* 初期状態では非表示 */
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -25,24 +124,24 @@
 
     <div class="post-form">
         <h2>新しい投稿</h2>
-        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="errorMessage" class="error-message"></div>
         <form id="postForm">
             <label for="username">名前:</label>
-            <input type="text" id="username" name="username" required>
+            <input type="text" id="username" name="username" required maxlength="50">
 
             <label for="message">メッセージ:</label>
-            <textarea id="message" name="message" required></textarea>
+            <textarea id="message" name="message" required maxlength="1000"></textarea>
 
             <button type="submit">投稿する</button>
         </form>
     </div>
 
-    <hr>
+    <hr style="border: 0; border-top: 1px solid #e0e0e0; margin: 30px 0;">
 
     <div class="posts-container">
         <h2>投稿一覧</h2>
         <div id="postsList">
-            <p>投稿がありません。</p>
+            <p style="text-align: center; color: #777;">投稿がありません。</p>
         </div>
     </div>
 
@@ -51,26 +150,37 @@
         const postsList = document.getElementById('postsList');
         const errorMessage = document.getElementById('errorMessage');
 
-        // 投稿を読み込む関数
-        async function fetchPosts() {
+        // HTMLエスケープ関数 (XSS対策)
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        // 投稿を読み込み、表示する関数
+        async function fetchAndDisplayPosts() {
             try {
-                const response = await fetch('/posts');
+                const response = await fetch('/posts'); // サーバーから投稿データを取得
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTPエラー! ステータス: ${response.status}`);
                 }
-                const posts = await response.json();
-                displayPosts(posts);
+                const posts = await response.json(); // JSON形式でパース
+                displayPosts(posts); // 投稿を表示する関数を呼び出す
             } catch (error) {
                 console.error('投稿の取得に失敗しました:', error);
-                postsList.innerHTML = '<p style="color: red;">投稿の読み込み中にエラーが発生しました。</p>';
+                // エラーメッセージをユーザーに表示
+                postsList.innerHTML = '<p style="color: red; text-align: center;">投稿の読み込み中にエラーが発生しました。</p>';
+                // フォームのエラーメッセージも表示
+                showErrorMessage('投稿の読み込み中にエラーが発生しました。サーバーが起動しているか確認してください。');
             }
         }
 
-        // 投稿を表示する関数
+        // 投稿をHTMLとして表示する関数
         function displayPosts(posts) {
             postsList.innerHTML = ''; // 既存の投稿をクリア
+
             if (posts.length === 0) {
-                postsList.innerHTML = '<p>投稿がありません。</p>';
+                postsList.innerHTML = '<p style="text-align: center; color: #777;">投稿がありません。</p>';
                 return;
             }
 
@@ -88,9 +198,11 @@
                     second: '2-digit'
                 });
 
+                // XSS対策を施したHTMLを生成
                 postElement.innerHTML = `
                     <div class="post-meta">
-                        <strong>${escapeHTML(post.username)}</strong> - ${formattedDate}
+                        <strong>${escapeHTML(post.username)}</strong>
+                        <span>${formattedDate}</span>
                     </div>
                     <div class="post-message">
                         ${escapeHTML(post.message)}
@@ -100,28 +212,33 @@
             });
         }
 
-        // HTMLエスケープ関数 (XSS対策)
-        function escapeHTML(str) {
-            const div = document.createElement('div');
-            div.appendChild(document.createTextNode(str));
-            return div.innerHTML;
+        // エラーメッセージを表示するヘルパー関数
+        function showErrorMessage(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // エラーメッセージを非表示にするヘルパー関数
+        function hideErrorMessage() {
+            errorMessage.textContent = '';
+            errorMessage.style.display = 'none';
         }
 
         // フォーム送信時の処理
         postForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); // デフォルトのフォーム送信を防止
+            event.preventDefault(); // デフォルトのフォーム送信（ページ遷移）を防止
 
-            errorMessage.style.display = 'none'; // エラーメッセージをリセット
+            hideErrorMessage(); // エラーメッセージをリセット
 
             const username = document.getElementById('username').value.trim();
             const message = document.getElementById('message').value.trim();
 
             if (!username || !message) {
-                errorMessage.textContent = '名前とメッセージの両方を入力してください。';
-                errorMessage.style.display = 'block';
+                showErrorMessage('名前とメッセージの両方を入力してください。');
                 return;
             }
 
+            // URLSearchParamsを使ってフォームデータをエンコード
             const formData = new URLSearchParams();
             formData.append('username', username);
             formData.append('message', message);
@@ -130,29 +247,28 @@
                 const response = await fetch('/submit', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/x-www-form-urlencoded', // フォームデータのContent-Type
                     },
-                    body: formData.toString()
+                    body: formData.toString() // エンコードしたデータを送信
                 });
 
                 if (response.ok) {
-                    document.getElementById('username').value = ''; // フォームをクリア
+                    // 投稿成功後、フォームをクリアし、投稿一覧を再読み込み
+                    document.getElementById('username').value = '';
                     document.getElementById('message').value = '';
-                    fetchPosts(); // 投稿後に投稿一覧を再読み込み
+                    fetchAndDisplayPosts();
                 } else {
-                    const errorText = await response.text();
-                    errorMessage.textContent = `投稿エラー: ${errorText}`;
-                    errorMessage.style.display = 'block';
+                    const errorText = await response.text(); // サーバーからのエラーメッセージを取得
+                    showErrorMessage(`投稿エラー: ${errorText}`);
                 }
             } catch (error) {
-                console.error('フォーム送信中にエラーが発生しました:', error);
-                errorMessage.textContent = '投稿中にネットワークエラーが発生しました。';
-                errorMessage.style.display = 'block';
+                console.error('フォーム送信中にネットワークエラーが発生しました:', error);
+                showErrorMessage('投稿中にネットワークエラーが発生しました。サーバーが起動しているか確認してください。');
             }
         });
 
-        // ページ読み込み時に投稿を読み込む
-        document.addEventListener('DOMContentLoaded', fetchPosts);
+        // ページが完全に読み込まれたら投稿を読み込む
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayPosts);
     </script>
 </body>
 </html>
