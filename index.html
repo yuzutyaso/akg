@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプルな掲示板</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background-color: #f4f4f4; color: #333; }
+        h1 { text-align: center; color: #0056b3; }
+        .post-form, .posts-container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], textarea { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 80px; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+        .post { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+        .post:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .post-meta { font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        .post-message { white-space: pre-wrap; word-break: break-word; }
+        .error-message { color: red; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>シンプルな掲示板</h1>
+
+    <div class="post-form">
+        <h2>新しい投稿</h2>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <form id="postForm">
+            <label for="username">名前:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="message">メッセージ:</label>
+            <textarea id="message" name="message" required></textarea>
+
+            <button type="submit">投稿する</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <div class="posts-container">
+        <h2>投稿一覧</h2>
+        <div id="postsList">
+            <p>投稿がありません。</p>
+        </div>
+    </div>
+
+    <script>
+        const postForm = document.getElementById('postForm');
+        const postsList = document.getElementById('postsList');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // 投稿を読み込む関数
+        async function fetchPosts() {
+            try {
+                const response = await fetch('/posts');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const posts = await response.json();
+                displayPosts(posts);
+            } catch (error) {
+                console.error('投稿の取得に失敗しました:', error);
+                postsList.innerHTML = '<p style="color: red;">投稿の読み込み中にエラーが発生しました。</p>';
+            }
+        }
+
+        // 投稿を表示する関数
+        function displayPosts(posts) {
+            postsList.innerHTML = ''; // 既存の投稿をクリア
+            if (posts.length === 0) {
+                postsList.innerHTML = '<p>投稿がありません。</p>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post');
+
+                const date = new Date(post.timestamp);
+                const formattedDate = date.toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                postElement.innerHTML = `
+                    <div class="post-meta">
+                        <strong>${escapeHTML(post.username)}</strong> - ${formattedDate}
+                    </div>
+                    <div class="post-message">
+                        ${escapeHTML(post.message)}
+                    </div>
+                `;
+                postsList.appendChild(postElement);
+            });
+        }
+
+        // HTMLエスケープ関数 (XSS対策)
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        // フォーム送信時の処理
+        postForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // デフォルトのフォーム送信を防止
+
+            errorMessage.style.display = 'none'; // エラーメッセージをリセット
+
+            const username = document.getElementById('username').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            if (!username || !message) {
+                errorMessage.textContent = '名前とメッセージの両方を入力してください。';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append('username', username);
+            formData.append('message', message);
+
+            try {
+                const response = await fetch('/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData.toString()
+                });
+
+                if (response.ok) {
+                    document.getElementById('username').value = ''; // フォームをクリア
+                    document.getElementById('message').value = '';
+                    fetchPosts(); // 投稿後に投稿一覧を再読み込み
+                } else {
+                    const errorText = await response.text();
+                    errorMessage.textContent = `投稿エラー: ${errorText}`;
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('フォーム送信中にエラーが発生しました:', error);
+                errorMessage.textContent = '投稿中にネットワークエラーが発生しました。';
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        // ページ読み込み時に投稿を読み込む
+        document.addEventListener('DOMContentLoaded', fetchPosts);
+    </script>
+</body>
+</html>
